@@ -2,8 +2,6 @@ package com.example.vladik.a07_01_18_home_work;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.view.menu.ActionMenuItem;
@@ -13,7 +11,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,17 +23,23 @@ public class ListView extends AppCompatActivity {
     private String email, pass, fileName;
     private String new_name, new_phone, new_email, new_description;
 
+    private android.widget.ListView myList;
+    private MyAdapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
+        Log.d("MY_TASK", "CREATED ACTIVITY");
         Intent intent = getIntent();
         if(intent != null){
             email = intent.getExtras().getString("EMAIL");
             pass = intent.getExtras().getString("PASS");
             fileName = email+pass;
         }
+        adapter = new MyAdapter();
+        //myList.setAdapter(adapter);
 
     }
 
@@ -51,9 +54,30 @@ public class ListView extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.done_item){Toast.makeText(this, "LogOut", Toast.LENGTH_LONG).show();}
-        if(item.getItemId() == R.id.add_item){Toast.makeText(this, "Add", Toast.LENGTH_LONG).show();}
+        if(item.getItemId() == R.id.add_item){
+            Intent intent = new Intent(this, AddPerson.class);
+            startActivityForResult(intent, 1);
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == RESULT_OK){
+            if(requestCode == 1){
+                data = getIntent();
+                new_name = data.getExtras().getString("NAME");
+                new_phone = data.getExtras().getString("PHONE");
+                new_email = data.getExtras().getString("EMAIL");
+                new_description = data.getExtras().getString("DSCRP");
+
+                Person p = new Person(new_name, new_phone, new_email, new_description);
+                adapter.addPerson(p);
+
+            }
+        }
     }
 
     class MyTask extends AsyncTask<Void, ArrayList<Person>, Void>{
@@ -72,12 +96,11 @@ public class ListView extends AppCompatActivity {
     }
 
     class MyAdapter extends BaseAdapter{
-        ArrayList<Person> users;
+        private ArrayList<Person> users;
 
-        public MyAdapter(ArrayList<Person> users){
-            this.users = users;
+        public MyAdapter(){
+            users = new ArrayList<>();
         }
-
 
         @Override
         public int getCount() {
@@ -109,6 +132,10 @@ public class ListView extends AppCompatActivity {
             dscr_txt.setText(users.get(i).getDescription());
 
             return view;
+        }
+        public void addPerson(Person p){
+            users.add(0, p);
+            notifyDataSetChanged();
         }
     }
 }
